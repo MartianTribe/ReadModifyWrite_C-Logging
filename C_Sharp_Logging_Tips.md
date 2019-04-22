@@ -47,23 +47,112 @@ Logging with C# requires a logging library. Fortunately Microsoft bundles a dece
 Now define TraceSource in your code.
 
 ```C#
-using System;
-using System.Diagnostics;
-class Program
-    {
-        private static TraceSource _source = new TraceSource("TraceTest");
-        static void Main(string[] args)
-        {
-            var i = 10; var j = 5;
-            _source.TraceEvent(TraceEventType.Information, 0, "Calculating a multiplication problem: {0}x{1}", i,j);
-           ....
-            }
-}
+// Initialize the trace source.
+  static TraceSource ts = new TraceSource("TraceTest");
+  SwitchAttribute("SourceSwitch", typeof(SourceSwitch))]
+
+  Console.WriteLine("TraceSource name = " + ts.Name);
+  Console.WriteLine("TraceSource switch level = " + ts.Switch.Level);
+  Console.WriteLine("TraceSource switch = " + ts.Switch.DisplayName);
 ```
 
-You will get the following output: 
+Logging information to the screen is helpful, but what if you want to run a series of debug test and compare the results or maintain an event log? TraceSource outputs its messages to a `listener`, an object that receives messages from the `System.Diagnostics.Debug` and `System.Diagnostics.Trace` classes and outputs them to a predetermined location, such as the console.log, event log, or a file.  
+
+To add a `listener` to your configuration file that outputs to a file use this code: 
+
+```XML
+
+<configuration>
+  <system.diagnostics>
+    <trace autoflush="false" indentsize="4">
+      <listeners>
+        <add name="myListener" type="System.Diagnostics.TextWriterTraceListener" initializeData="TextWriterOutput.log" />
+        <remove name="Default" />
+      </listeners>
+    </trace>
+  </system.diagnostics>
+</configuration>
+
+```
+
+This adds a `listener` object called *myListener* which is of a `TextWriterTraceListener` type and outputs its messages to a log file titled *TextWriterOutput*.
+
+Use the Trace class to output text to the file. 
 
 ```C#
-TraceTest Information: 0 : Calculating a multiplication problem: 10x5
+Trace.TraceInformation("Test message.");
+// You must close or flush the trace to empty the output buffer.
+Trace.Flush();
 ```
+
+Listeners can also be added in code. You do so by adding the new listener to the Trace.Listeners collection and pass trace information to the listeners. 
+
+```C#
+Trace.Listeners.Add(new TextWriterTraceListener("TextWriterOutput.log", "myListener"));
+Trace.TraceInformation("Test message.");
+// You must close or flush the trace to empty the output buffer.
+Trace.Flush();
+```
+
+## Logging Libraries
+
+TraceSource is effective for simple applications but as an application becomes more complex you will want to consider a more robust logging solution. There are several libraries that handle the heavy lifting of working with the advanced features of `System.Diagnostic.Tracesource` such as [log4net](https://logging.apache.org/log4net/), [Nlog](https://nlog-project.org/), or [serilog](https://serilog.net/). 
+
+Which library you chose will depend on your unique needs though for the most part they are all similar in functionality. For our examples we will use log4net.
+
+### Configuring Log4Net
+
+To utilize a library for logging you will need to add it to your configuration file.
+
+```C#
+<configuration>
+  <configSections>
+    <section name="log4net" type="log4net.Config.Log4NetConfigurationSectionHandler, log4net" />
+  </configSections>
+  <log4net>
+    <appender name="LogFileAppender" type="log4net.Appender.RollingFileAppender">
+    <param name="File" value="myLoggerFile.log"/>
+    <lockingModel type="log4net.Appender.FileAppender+MinimalLock" />
+    <appendToFile value="true" />
+    <rollingStyle value="Size" />
+    <maxSizeRollBackups value="2" />
+    <maximumFileSize value="1MB" />
+    <staticLogFileName value="true" />
+    <layout type="log4net.Layout.PatternLayout">
+            <param name="ConversionPattern" value="%d [%t] %-5p %c %m%n"/>
+    </layout>
+</appender>
+
+<root>
+    <level value="ALL" />
+    <appender-ref ref="LogFileAppender" />
+</root>
+  </log4net>
+</configuration>
+```
+
+The `<appender />` element specifies the name and logger type. In this example we are using a `RollingFileAppender` but there are many [types you can select](https://logging.apache.org/log4net/log4net-1.2.13/release/sdk/log4net.Appender.html). 
+
+`<param name="File" value="myLoggerFile.log"/>` sets the file name and path. In this case we will be logging to a file called *myLoggerFile.log*.
+
+The `<lockingModel />` element is required to enable you to write to the file. Without setting this the file will be locked until you shutdown the application or website.
+
+`<appendToFile value="true"/>` as it implies directs Log4Net to append new entries to the end of the file. 
+
+`<rollingStyle value="Size" />` is needed for the `RollingFileAppender` type we selected. It defines a the criteria for when it should  roll (create a new file). In this case we will set a maxmimum file size. 
+
+`<maxSizeRollBackups value="2" />` indicates the number of log files that will be kept. This is instructing Log4Net to keep two. 
+
+`<maximumFileSize value="1MB" />` determines the maximum file size. Here we are instructing that the file sizes not exceed 1MB. 
+
+`<staticLogFileName value="true" />` indicates that the file name will not change. 
+
+The `<layout/>` element tells Log4Net how each log line should look like. As with the types of appenders there are multiple options to displaying your log content. You can review these options [here](https://logging.apache.org/log4net/log4net-1.2.13/release/sdk/log4net.Layout.html). 
+
+The `<root>` element is the root logger. If it is set then all logger instances in your application will turn up in the logger specified in the <appender-ref />element. 
+
+
+
+
+
 
