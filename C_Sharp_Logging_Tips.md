@@ -94,11 +94,40 @@ Trace.TraceInformation("Test message.");
 Trace.Flush();
 ```
 
-## Logging Libraries
+## A Logging Plan
 
-TraceSource is effective for simple applications but as an application becomes more complex you will want to consider a more robust logging solution. There are several libraries that handle the heavy lifting of working with the advanced features of `System.Diagnostic.Tracesource` such as [log4net](https://logging.apache.org/log4net/), [Nlog](https://nlog-project.org/), or [serilog](https://serilog.net/). 
+In order to consider your logs as part of your production debugging strategy as well as post production there should be some set goals to your logging and a plan to achieve those goals for both debugging and real-world support.
 
-Which library you chose will depend on your unique needs though for the most part they are all similar in functionality. For our examples we will use log4net.
+Logs on your local machine are easy to open files with manageable and helpful data. A released app is a different story, logs and accessing them open a host of pain points. For starters, there is a lot more data being accumulated, which you may not have access to and could be on multiple servers or spread across multiple service boundaries. Generally, there is little context of the user, the logs themselves are hard to query, and that is if the logs are still retained. 
+
+Having a strategy of what and when to log for released apps is usually the only resource you will have to discover why a feature of your app is not functioning or is functioning incorrectly. There are tools that can let you know of a memory leak or performance issues but they can't provide specific information on why a user can't login or view a certain area of the application. 
+
+Development teams should incorporate a culture of logging in the same manner that TDD is considered. Code reviews should look at not just the testing coverage but logging as well. A few points to help develop this culture would be:  
+
+- Logging key transactional events. For example, if we had a method that added integers we would want to log the calculation. 
+
+- Logging that something happened is not enough, you want to ensure your logs contain contextual data. 
+
+- Aggregate your data. Having to dig across multiple servers and then the log files on each is an unnecessary pain. Devise a strategy to consolidate all your log data into one location, available to your entire team and easily distilled. 
+
+- Monitor the logs. They should not be static files that are only reviewed when a bug report crosses your desk but they should be inspected on a regular basis looking for issues and errors. 
+
+### Log Key Events and Contextual Logging
+
+There are a lot of tech shops where the log messages are simply the error description. 
+
+```#C
+  catch(Exception e) 
+  { 
+      this.log(e)
+  }
+```
+
+This is okay, we can see the Exception thrown, but it would be so much better with some context. If we want all of that context—ID and timestamp stuff—do we seriously have to write all kinds of boilerplate code?
+
+No, brilliant people have written many logging libraries and frameworks so you don't have to. There are several libraries that handle the heavy lifting of working with the advanced features of `System.Diagnostic.Tracesource` such as [Log4Net](https://logging.apache.org/log4net/), [Nlog](https://nlog-project.org/), or [serilog](https://serilog.net/). 
+
+Which library you chose will depend on your unique needs though for the most part they are all similar in functionality. For our examples we will use ç.
 
 ### Configuring Log4Net
 
@@ -131,6 +160,8 @@ To utilize a library for logging you will need to add it to your configuration f
 </configuration>
 ```
 
+### What are all those elements for?
+
 The `<appender />` element specifies the name and logger type. In this example we are using a `RollingFileAppender` but there are many [types you can select](https://logging.apache.org/log4net/log4net-1.2.13/release/sdk/log4net.Appender.html). 
 
 `<param name="File" value="myLoggerFile.log"/>` sets the file name and path. In this case we will be logging to a file called *myLoggerFile.log*.
@@ -157,56 +188,24 @@ Once your configuration is complete you call Log4Net in the class you want to us
 private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 ```
 
-and to log just make calls like this: 
+Next, at the very top of your Main() method, add the following line.  
 
 ```C#
-this.log.Debug("Debug message");
-this.log.Info("Info message");
-this.log.Warn("Warning message");
-this.log.Error("Error message");
-this.log.Fatal("Fatal message");
-``` 
-
-## A Logging Plan
-
-In order to consider your logs as part of your production debugging strategy as well as post production there should be some set goals to your logging and a plan to achieve those goals for both debugging and real-world support.
-
-Logs on your local machine are easy to open files with manageable and helpful data. A released app is a different story, logs and accessing them open a host of pain points. For starters, there is a lot more data being accumulated, which you may not have access to and could be on multiple servers or spread across multiple service boundaries. Generally, there is little context of the user, the logs themselves are hard to query, and that is if the logs are still retained. 
-
-Having a strategy of what and when to log for released apps is usually the only resource you will have to discover why a feature of your app is not functioning or is functioning incorrectly. There are tools that can let you know of a memory leak or performance issues but they can't provide specific information on why a user can't login or view a certain area of the application. 
-
-Development teams should incorporate a culture of logging in the same manner that TDD is considered. Code reviews should look at not just the testing coverage but logging as well. A few points to help develop this culture would be:  
-
-- Logging key transactional events. For example, if we had a method that added integers we would want to log the calculation. 
-
-- Logging that something happened is not enough, you want to ensure your logs contain contextual data. 
-
-- Aggregate your data. Having to dig across multiple servers and then the log files on each is an unnecessary pain. Devise a strategy to consolidate all your log data into one location, available to your entire team and easily distilled. 
-
-- Monitor the logs. They should not be static files that are only reviewed when a bug report crosses your desk but they should be inspected on a regular basis looking for issues and errors. 
-
-### Log Key Events
-
-There are a lot of tech shops where the log messages are simply the error description. 
-
-```#C
-  catch(Exception e) 
-  { 
-      this.log(e)
-  }
+XmlConfigurator.Configure();
 ```
 
-Let's see if we can make a log message be more helpful. First, let's create a Foo class. 
+And finally, add this line where you want to log information: 
 
-```#C
-public class Foo
-{
-   public int fooID { get; set; }
-   public int requiredInt { get; set; }
-   public string FooString { get; set; }
-   public string BarString { get; set; }
-}
-```
+```C#
+log.Info("This is my first log message");
+
+
+
+
+
+
+
+
 
 
 
