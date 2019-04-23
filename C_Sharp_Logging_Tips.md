@@ -274,7 +274,6 @@ public static void CreateDog(int? licenseNum, string dogName, string dogBreed)
   try
   {
 
-    log.Debug("Creating a dog.");
 
     using (var context = new ApplicationDbContext())
     {
@@ -282,6 +281,8 @@ public static void CreateDog(int? licenseNum, string dogName, string dogBreed)
       myDog.License = (int) licenseNum;
       myDog.Name = dogName;
       myDog.Breed = dogBreed
+
+      log.Debug("Creating a dog.");
 
       context.Dogs.Add(myDog);
       context.SaveChanges();
@@ -314,7 +315,136 @@ at System.Nullable`1.get_Value()
 at DogPark.Web.Controllers.GimmeErrorsController.CreateDogs(Nullable`1 licenseNum, String dogName, String dogBreed) in c:DogParkSandbox.NetDogPark.WebDogPark.WebControllersGimmeErrorsController.cs:line 57 [CID:(null)]
 ```
 
-See those `[CID:(null)]` entries. Those are part of the Log4Net logging methods, specifically a property called `debugData` that will display key-value pairs of data. In order for Log4Net to display this data
+See those `[CID:(null)]` entries. Those are part of the Log4Net logging methods, specifically a property called `debugData` that will display key-value pairs of data. Let's rewrite our opening log statement and serialize the data. 
+
+```C#
+  log.Debug(string.Format("Creating a dog: {0}",JsonConvert.SerializeObject(myDog)));
+```
+
+Which will display in our log file as: 
+
+```C#
+  DEBUG2019-23-04 10:39:53.3295 [11] Creating a dog: {"ID":0,"License":1,"Fido":"Labrador Retriever"}
+```
+
+Not bad, we're starting to get some context that provides a better picture of what is happening in our app. The problem with this approach is, if we had a very complext object, we would end up having to add a lot of additional items to our log string.  
+
+### Strucutred Logging
+
+Logging should be simple and quick, not another process within itself and the end result easily readable. Log4Net offers a JSON pacakge, log4net.Ext.Json which enables you log any object as JSON. Install the package and add it as a serialized layout to any appender. 
+
+```XML
+<appender...>
+    <layout type='log4net.Layout.SerializedLayout, log4net.Ext.Json'>
+    </layout> 
+</appender>
+```
+
+We can now reduce our log call to this. 
+
+```C#
+var aDog = CreateDog(1, "Fido", "Labrador Retriever")
+log.Debug("Created a dog", new { Dog=aDog,CreatedBy=User.Identity.Name});
+```
+
+Which will display a very readable log message. 
+
+```JSON
+
+"json":
+{
+  "_Dog": { 
+    "id":"10",
+    "license":"1",
+    "dogName":"Fido",
+    "dogBreed":"Labrador Retriever"
+  },
+  "createdBy": "mkurtz@alldogs.com"
+}
+```
+
+### Diagnostic Context Logging
+
+And finally, our last point, diagnostic logging. In the `aDog` object I created above you might of noticed I logged the user who created it. This can be incredibly useful when your app is in production and thousands of users might be creating a `Dog` object. Adding diagnostic details such as this is what separates top level logging from just outputting the Exception to the console. 
+
+There's a whole host of details that could be useful, from the user location to HTTPRequest parameters. But why place the burden on developers to remember to add those details to each log message when frameworks like Log4Net and others make it easy to automate. 
+
+Log4Net provides a class, `LogicalThreadContext` which enables the automation of diagnostic data. You just have to input what data want to log. The set up is simple, just add context variables you want to log: 
+
+```XML
+type="DogPark.log4net.DogParkAppender, DogPark.log4net">
+   <logicalThreadContextKeys>User,Request</logicalThreadContextKeys>
+```
+We're telling Log4Net to add `User` and `Request` as keys for the `LogicalThreadContext`. And in the `Global.asax` you can add this code for every HTTPRequest. You can even modify what request parameters will be logged. 
+
+
+```C#
+void MvcApplication_AuthenticateRequest(object sender, EventArgs e)
+{
+   try
+   {
+      log4net.LogicalThreadContext.Properties["User"] = User;
+   }
+   catch (Exception ex)
+   {
+      log.Error(ex);
+   }
+}   void MvcApplication_BeginRequest(object sender, EventArgs e)
+{
+   log4net.LogicalThreadContext.Properties["Request"] = new
+   {
+      HostAddress = Request.UserHostAddress,
+      RawUrl = Request.RawUrl,
+      QueryString = Request.QueryString,
+      FormValues = Request.Form
+   };
+}
+```
+
+Now to log structured, diagnostic content you simply add this line of code: 
+
+```C#
+var aDog = CreateDog(1, "Fido", "Labrador Retriever")
+log.Debug("Created a dog", aDog);
+```
+
+and get this context rich, easy to read log message: 
+
+```JSON
+
+"json":
+{
+  "_Dog": { 
+    "id":"10",
+    "license":"1",
+    "dogName":"Fido",
+    "dogBreed":"Labrador Retriever",
+    "_context": {
+
+      "_request": { 
+         "rawurl": "https://www.doghouse.com",
+         "hostAddress": "::1",
+         "FormValues":[],
+         "QueryString":[]
+      },
+
+      "_user": { 
+        ...
+      }
+
+    }
+  },
+}
+```
+
+## Conclusion
+
+Logging is a powerful tool for both development and production debugging. To ensure that your application provides the level of logging that'll assist your development team in tracking down and fixing bugs in a timely manner follow these steps: 
+
+1. Have a plan: Know what needs to be logged and when and where to store the log files so that the entire team can access them when needed. 
+2. Use a logging framework, someone already invented that wheel, spend your time setting up what needs to be logged rather than how to do it. 
+3. Structured, diagnostic, context rich logging provides the best means, from a logging perspectife,  of solving your bug issues.  
+
 
 
 
