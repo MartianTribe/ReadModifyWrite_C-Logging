@@ -1,12 +1,12 @@
 # Seven Tips For Logging in C#
 
-In the world of software development, unit testing has quickly risen to the prominence of a required process during the development phase. And documentation is quickly ascending as a must need for post production. Lost in the white hot glare of these two shining stars is another process, one that has existed for some time but does not get the same attention of testing and documentation, logging. 
+In the world of software development, unit testing has quickly risen to the prominence of a required process in development. And documentation is quickly ascending as a must need for post production. Lost in the white hot glare of these two shining stars is another process, one that has existed for some time but does not get the same attention as testing and documentation, logging. 
 
 Most developers will argue that they do not neglect logging. It is a vital tool in their debugging arsenal. One of the benchmarks of progressing from a novice developer to the next level is the ability to output a stack trace when an exception occurs and understand it. But how many developers think of logs as a post production asset? 
 
-Logging is the powerful bridge between being a vital tool for unit testing and debugging in production and as an additional means of communication with the end users of your application, who may not have the technical savvy to read a stack trace. 
+Logging is the powerful bridge between being a vital tool for unit testing and debugging in production and a data rich repository of the real world use of your application. Logs can also provide a layer of support and communication with system administrators and even users.  
 
-This article will show you how to take your C# logging to the next level whether it is logging to the console, a file or across multiple server and to review the concept of logging as a vital part of your software products post production support.  
+This article will show you how to take your C# logging to the next level whether it is logging to the console, a file or across multiple server and to review the concept of logging as a vital part of your application's post production support.  
 
 ## Getting Started
 
@@ -150,6 +150,68 @@ The `<lockingModel />` element is required to enable you to write to the file. W
 The `<layout/>` element tells Log4Net how each log line should look like. As with the types of appenders there are multiple options to displaying your log content. You can review these options [here](https://logging.apache.org/log4net/log4net-1.2.13/release/sdk/log4net.Layout.html). 
 
 The `<root>` element is the root logger. If it is set then all logger instances in your application will turn up in the logger specified in the <appender-ref />element. 
+
+Once your configuration is complete you call Log4Net in the class you want to use logging in by adding this code: 
+
+```C#
+private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+```
+
+and to log just make calls like this: 
+
+```C#
+this.log.Debug("Debug message");
+this.log.Info("Info message");
+this.log.Warn("Warning message");
+this.log.Error("Error message");
+this.log.Fatal("Fatal message");
+``` 
+
+## A Logging Plan
+
+In order to consider your logs as part of your production debugging strategy as well as post production there should be some set goals to your logging and a plan to achieve those goals for both debugging and real-world support.
+
+Logs on your local machine are easy to open files with manageable and helpful data. A released app is a different story, logs and accessing them open a host of pain points. For starters, there is a lot more data being accumulated, which you may not have access to and could be on multiple servers or spread across multiple service boundaries. Generally, there is little context of the user, the logs themselves are hard to query, and that is if the logs are still retained. 
+
+Having a strategy of what and when to log for released apps is usually the only resource you will have to discover why a feature of your app is not functioning or is functioning incorrectly. There are tools that can let you know of a memory leak or performance issues but they can't provide specific information on why a user can't login or view a certain area of the application. 
+
+Development teams should incorporate a culture of logging in the same manner that TDD is considered. Code reviews should look at not just the testing coverage but logging as well. A few points to help develop this culture would be:  
+
+- Logging key transactional events. For example, if we had a method that added integers we would want to log the calculation. 
+
+- Logging that something happened is not enough, you want to ensure your logs contain contextual data. 
+
+- Aggregate your data. Having to dig across multiple servers and then the log files on each is an unnecessary pain. Devise a strategy to consolidate all your log data into one location, available to your entire team and easily distilled. 
+
+- Monitor the logs. They should not be static files that are only reviewed when a bug report crosses your desk but they should be inspected on a regular basis looking for issues and errors. 
+
+### Log Key Events
+
+There are a lot of tech shops where the log messages are simply the error description. 
+
+```#C
+  catch(Exception e) 
+  { 
+      this.log(e)
+  }
+```
+
+Let's see if we can make a log message be more helpful. First, let's create a Foo class. 
+
+```#C
+public class Foo
+{
+   public int fooID { get; set; }
+   public int requiredInt { get; set; }
+   public string FooString { get; set; }
+   public string BarString { get; set; }
+}
+```
+
+
+
+
+
 
 
 
