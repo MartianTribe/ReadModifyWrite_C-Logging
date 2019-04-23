@@ -1,4 +1,4 @@
-# Seven Tips For Logging in C#
+# Tips For Logging in C#
 
 In the world of software development, unit testing has quickly risen to the prominence of a required process in development. And documentation is quickly ascending as a must need for post production. Lost in the white hot glare of these two shining stars is another process, one that has existed for some time but does not get the same attention as testing and documentation, logging. 
 
@@ -6,7 +6,7 @@ Most developers will argue that they do not neglect logging. It is a vital tool 
 
 Logging is the powerful bridge between being a vital tool for unit testing and debugging in production and a data rich repository of the real world use of your application. Logs can also provide a layer of support and communication with system administrators and even users.  
 
-This article will show you how to take your C# logging to the next level whether it is logging to the console, a file or across multiple server and to review the concept of logging as a vital part of your application's post production support.  
+This article will show you how to take your C# logging to the next level whether it is logging to the console, a file or database for debugging and post-production support.  
 
 ## Getting Started
 
@@ -127,11 +127,11 @@ This is okay, we can see the Exception thrown, but it would be so much better wi
 
 No, brilliant people have written many logging libraries and frameworks so you don't have to. There are several libraries that handle the heavy lifting of working with the advanced features of `System.Diagnostic.Tracesource` such as [Log4Net](https://logging.apache.org/log4net/), [Nlog](https://nlog-project.org/), or [serilog](https://serilog.net/). 
 
-Which library you chose will depend on your unique needs though for the most part they are all similar in functionality. For our examples we will use ç.
+Which library you chose will depend on your unique needs though for the most part they are all similar in functionality. For our examples we will use *Log4Net*.
 
 ### Configuring Log4Net
 
-To utilize a library for logging you will need to add it to your configuration file.
+To utilize a library for logging it will need to be added to your configuration file.
 
 ```C#
 <configuration>
@@ -182,10 +182,12 @@ The `<layout/>` element tells Log4Net how each log line should look like. As wit
 
 The `<root>` element is the root logger. If it is set then all logger instances in your application will turn up in the logger specified in the <appender-ref />element. 
 
+### Outputting a message
+
 Once your configuration is complete you call Log4Net in the class you want to use logging in by adding this code: 
 
 ```C#
-private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 ```
 
 Next, at the very top of your Main() method, add the following line.  
@@ -198,6 +200,130 @@ And finally, add this line where you want to log information:
 
 ```C#
 log.Info("This is my first log message");
+``` 
+
+The full class code would look like this: 
+
+```C#
+
+class LogTest 
+{
+  private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType); 
+
+  static void Main(string[] args) 
+  {
+    XmlConfigurator.Configure();
+
+    var displayMessage("Hello World!");
+
+    log.Info(displayMessage)
+
+  }
+
+}
+```
+
+and the results put this log message into more context than just using TraceSource. 
+
+```
+2019-04-23 00:39:10, 092 [1] INFO  ConsoleProject.LogTest Hello World!
+```
+
+This log message provides us with a timnestamp, the thread, the logging level, the class the message originated from and the message. Not bad, but it would be nice to get even more context with our message. 
+
+### Leveling Up
+
+Let's add a new class
+
+```C#
+  public class Dog
+
+    public int ID { get; set; }
+    public int License { get; set; }
+    public string Name { get; set; }
+    public string Breed { get; set; }
+```
+
+In our Dog class License is an int that is required. Let's create an instance of Dog and save it to a database. 
+
+```C#
+public static void CreateDog(int? licenseNum, string dogName, string dogBreed)
+{
+
+    using (var context = new ApplicationDbContext())
+   {
+      var myDog = new Dog();
+      myDog.License = (int) licenseNum;
+      myDog.Name = dogName;
+      myDog.Breed = dogBreed
+
+      context.Dogs.Add(myDog);
+      context.SaveChanges();
+
+   }
+
+}
+```
+
+The problem with this code is I am passing in a license number that could be null, but my class requires a value, and I am not checking for null. The first time I ran it, my app failed on the passing of a null licenseNun. Let's wrap this in a try statement and log to see what failed. 
+
+```C#
+public static void CreateDog(int? licenseNum, string dogName, string dogBreed)
+{
+
+  try
+  {
+
+    log.Debug("Creating a dog.");
+
+    using (var context = new ApplicationDbContext())
+    {
+      var myDog = new Dog();
+      myDog.License = (int) licenseNum;
+      myDog.Name = dogName;
+      myDog.Breed = dogBreed
+
+      context.Dogs.Add(myDog);
+      context.SaveChanges();
+
+    }
+
+  catch (Exception e) 
+  {
+    log.Error(e)
+  }
+
+}
+```
+Let's create some dogs. 
+
+```C#
+
+  CreateDog(1, "Fido", "Labrador Retriever")
+  CreateDog(null, "Rex", "German Shepherd")
+```
+
+Now check out the logs.
+
+```C#
+DEBUG2019-04-23 13:11:08.9834 [11] Creating a dog [CID:(null)]
+DEBUG2019-04-23 13:11:10.8458 [11] Creating a dog [CID:(null)]
+ERROR2019-04-23 13:11:10.8673 [11] System.InvalidOperationException: Nullable object must have a value.
+at System.ThrowHelper.ThrowInvalidOperationException(ExceptionResource resource)
+at System.Nullable`1.get_Value()
+at DogPark.Web.Controllers.GimmeErrorsController.CreateDogs(Nullable`1 licenseNum, String dogName, String dogBreed) in c:DogParkSandbox.NetDogPark.WebDogPark.WebControllersGimmeErrorsController.cs:line 57 [CID:(null)]
+```
+
+See those `[CID:(null)]` entries. Those are part of the Log4Net logging methods, specifically a property called `debugData` that will display key-value pairs of data. In order for Log4Net to display this data
+
+
+
+
+
+
+
+
+
 
 
 
