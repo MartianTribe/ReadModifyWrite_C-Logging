@@ -6,7 +6,7 @@ Logging is the powerful bridge between being a vital tool for unit testing and d
 
 This article will provide you with seven tips to take C# logging to the next level whether it is logging to the console, a file or database for debugging and post-production support. We'll examine: 
 
-1. Configuring for TraceSource, the Microsoft bundled logging library
+1. [Configuring for TraceSource, the Microsoft bundled logging library](configuring-for-traceSource-the-microsoft-bundled-logging-library)
 2. Logging to a file
 3. Creating a logging plan
 4. Configuring a logging framework
@@ -14,7 +14,7 @@ This article will provide you with seven tips to take C# logging to the next lev
 6. Structured Logging
 7. Diagnostic Logging
 
-## Configuring for TraceSource, the bundled logging library
+## Configuring for TraceSource, the Microsoft bundled logging library
 
 Logging with C# requires a logging library. Fortunately Microsoft bundles a decent native library called TraceSource within the C# package. In order to utilize TraceSource, it will need to be defined in your configuration file. The configuration file is located in the folder with the application executable and has the name of the application with the .config file name extension added. You can define TraceSource by adding the code below. 
 
