@@ -106,7 +106,7 @@ Trace.TraceInformation("Test message.");
 // You must close or flush the trace to empty the output buffer.
 Trace.Flush();
 ```
-<a href="loggingplan></a>
+<a name="loggingplan></a>
 ## Creating a logging plan
 
 In order to consider your logs as part of your development debugging strategy as well as live application support there should be some set goals to your logging and a plan to achieve those goals.
@@ -133,7 +133,7 @@ Development teams should incorporate a culture of logging in the same manner tha
 
 - Select a logging framework that can handle the needs of your logging plan. 
 
-<a href="loggingframework"></a>
+<a name="loggingframework"></a>
 ## Configuring a logging framework
 
 There are a lot of tech shops where the log messages are simply the error description. 
@@ -253,7 +253,7 @@ and the results put this log message into more context than just using TraceSour
 
 This log message provides us with a timnestamp, the thread, the logging level, the class the message originated from and the message. Not bad, but it would be nice to get even more context with our message. 
 
-<a href="contextuallogging"></a>
+<a name="contextuallogging"></a>
 ## Logging Contextual Data
 
 Using the standard contextual items available within the app such as the timestamp provides some much needed context to our log message. But what if you need specific data of a class or method? Let's add some strengh to our log message by adding some specific detail to it. Start by adding a class. 
@@ -370,7 +370,7 @@ Which will display in our log file as:
 
 Not bad, we're starting to get some context that provides a better picture of what is happening in our app. The problem with this approach is, if we had a very complext object, we would end up having to add a lot of additional items to our log string.  
 
-<a href="structuredlogging"></a>
+<a name="structuredlogging"></a>
 ## Strucutred Logging
 
 Logging should be simple and quick, not another process within itself and the end result easily readable. Log4Net offers a JSON pacakge, log4net.Ext.Json which enables you log any object as JSON. Install the package and add it as a serialized layout to any appender. 
@@ -404,7 +404,7 @@ Which will display a very readable log message.
   "createdBy": "mkurtz@alldogs.com"
 }
 ```
-<a href="diagnosticlogging"></a>
+<a name="diagnosticlogging"></a>
 ## Diagnostic Logging
 
 And finally, our last point, diagnostic logging. In the `aDog` object I created above you might of noticed I logged the user who created it. This can be incredibly useful when your app is in production and thousands of users might be creating a `Dog` object. Adding diagnostic details such as this is what separates top level logging from just outputting the Exception to the console. 
