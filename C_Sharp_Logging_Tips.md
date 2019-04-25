@@ -1,16 +1,22 @@
-# Tips For Logging in C#
+# Seven Tips For Logging in C#
 
 In the world of software development, unit testing has quickly risen to the prominence of a required process in development. And documentation is quickly ascending as a must need for post production. Lost in the white hot glare of these two shining stars is another process, one that has existed for some time but does not get the same attention as testing and documentation, logging. 
 
-Most developers will argue that they do not neglect logging. It is a vital tool in their debugging arsenal. One of the benchmarks of progressing from a novice developer to the next level is the ability to output a stack trace when an exception occurs and understand it. But how many developers think of logs as a post production asset? 
-
 Logging is the powerful bridge between being a vital tool for unit testing and debugging in production and a data rich repository of the real world use of your application. Logs can also provide a layer of support and communication with system administrators and even users.  
 
-This article will show you how to take your C# logging to the next level whether it is logging to the console, a file or database for debugging and post-production support.  
+This article will provide you with seven tips to take C# logging to the next level whether it is logging to the console, a file or database for debugging and post-production support. We'll examine: 
 
-## Getting Started
+1. Configuring for TraceSource, the bundled logging library
+2. Logging to a file
+3. Creating a logging plan
+4. Configuring a logging framework
+5. Logging Contextual Data
+6. Structured Logging
+7. Diagnostic Logging
 
-Logging with C# requires a logging library. Fortunately Microsoft bundles a decent native library called TraceSource within the C# package. In order to utilize TraceSource, it will need to be defined in your configuration file. The configuration file is located in the folder with the application executable and has the name of the application with the .config file name extension added.  
+## Configuring for TraceSource, the bundled logging library
+
+Logging with C# requires a logging library. Fortunately Microsoft bundles a decent native library called TraceSource within the C# package. In order to utilize TraceSource, it will need to be defined in your configuration file. The configuration file is located in the folder with the application executable and has the name of the application with the .config file name extension added. You can define TraceSource by adding the code below. 
 
 ```XML
 <configuration>  
@@ -50,15 +56,21 @@ Now define TraceSource in your code.
 // Initialize the trace source.
   static TraceSource ts = new TraceSource("TraceTest");
   SwitchAttribute("SourceSwitch", typeof(SourceSwitch))]
+```
 
+And you can now send messages to the console.
+
+```C#
   Console.WriteLine("TraceSource name = " + ts.Name);
   Console.WriteLine("TraceSource switch level = " + ts.Switch.Level);
   Console.WriteLine("TraceSource switch = " + ts.Switch.DisplayName);
 ```
 
+## Logging to a file
+
 Logging information to the screen is helpful, but what if you want to run a series of debug test and compare the results or maintain an event log? TraceSource outputs its messages to a `listener`, an object that receives messages from the `System.Diagnostics.Debug` and `System.Diagnostics.Trace` classes and outputs them to a predetermined location, such as the console.log, event log, or a file.  
 
-To add a `listener` to your configuration file that outputs to a file use this code: 
+To add a `listener` to your configuration file that outputs to a file add this code to you r configuration file.  
 
 ```XML
 
@@ -75,7 +87,7 @@ To add a `listener` to your configuration file that outputs to a file use this c
 
 ```
 
-This adds a `listener` object called *myListener* which is of a `TextWriterTraceListener` type and outputs its messages to a log file titled *TextWriterOutput*.
+This adds a `listener` object called *myListener* which is of a `TextWriterTraceListener` type and outputs the messages to a log file titled *TextWriterOutput*.
 
 Use the Trace class to output text to the file. 
 
@@ -94,15 +106,21 @@ Trace.TraceInformation("Test message.");
 Trace.Flush();
 ```
 
-## A Logging Plan
+## Creating a logging plan
 
-In order to consider your logs as part of your production debugging strategy as well as post production there should be some set goals to your logging and a plan to achieve those goals for both debugging and real-world support.
+In order to consider your logs as part of your development debugging strategy as well as live application support there should be some set goals to your logging and a plan to achieve those goals.
 
-Logs on your local machine are easy to open files with manageable and helpful data. A released app is a different story, logs and accessing them open a host of pain points. For starters, there is a lot more data being accumulated, which you may not have access to and could be on multiple servers or spread across multiple service boundaries. Generally, there is little context of the user, the logs themselves are hard to query, and that is if the logs are still retained. 
+Logs on your local machine are easy to open files with manageable and helpful data. A released app is a different story, logs and accessing them can sometimes be a challange.  
+- There is a lot more data being accumulated.  
+- You may not have access to that data.  
+- The logs could be on multiple servers or spread across multiple service boundaries. 
+- Generally, there is little context of the user.
+- The logs themselves are hard to query.
+- The logs may only be retained for a short period of time. 
 
 Having a strategy of what and when to log for released apps is usually the only resource you will have to discover why a feature of your app is not functioning or is functioning incorrectly. There are tools that can let you know of a memory leak or performance issues but they can't provide specific information on why a user can't login or view a certain area of the application. 
 
-Development teams should incorporate a culture of logging in the same manner that TDD is considered. Code reviews should look at not just the testing coverage but logging as well. A few points to help develop this culture would be:  
+Development teams should incorporate a culture of logging in the same manner that TDD has become incorporated within the development cycle. Code reviews should look at not just the testing coverage but if the developer has followed the logging plan. A few points to help develop this culture would be:  
 
 - Logging key transactional events. For example, if we had a method that added integers we would want to log the calculation. 
 
@@ -112,7 +130,9 @@ Development teams should incorporate a culture of logging in the same manner tha
 
 - Monitor the logs. They should not be static files that are only reviewed when a bug report crosses your desk but they should be inspected on a regular basis looking for issues and errors. 
 
-### Log Key Events and Contextual Logging
+- Select a logging framework that can handle the needs of your logging plan. 
+
+## Configuring a logging framework
 
 There are a lot of tech shops where the log messages are simply the error description. 
 
@@ -123,9 +143,9 @@ There are a lot of tech shops where the log messages are simply the error descri
   }
 ```
 
-This is okay, we can see the Exception thrown, but it would be so much better with some context. If we want all of that context—ID and timestamp stuff—do we seriously have to write all kinds of boilerplate code?
+This is okay, we can see the Exception thrown, but it would be so much better with some context. The problem with putting context into your log messages, the user id, a timestamp, is it requires a lot of code. 
 
-No, brilliant people have written many logging libraries and frameworks so you don't have to. There are several libraries that handle the heavy lifting of working with the advanced features of `System.Diagnostic.Tracesource` such as [Log4Net](https://logging.apache.org/log4net/), [Nlog](https://nlog-project.org/), or [serilog](https://serilog.net/). 
+This is where logging libraries and frameworks come in. These libraries, such as  such as [Log4Net](https://logging.apache.org/log4net/), [Nlog](https://nlog-project.org/), or [serilog](https://serilog.net/), handle the heavy lifting of working with the advanced features of `System.Diagnostic.Tracesource` so you don't have to. 
 
 Which library you chose will depend on your unique needs though for the most part they are all similar in functionality. For our examples we will use *Log4Net*.
 
@@ -231,9 +251,9 @@ and the results put this log message into more context than just using TraceSour
 
 This log message provides us with a timnestamp, the thread, the logging level, the class the message originated from and the message. Not bad, but it would be nice to get even more context with our message. 
 
-### Leveling Up
+## Logging Contextual Data
 
-Let's add a new class
+Using the standard contextual items available within the app such as the timestamp provides some much needed context to our log message. But what if you need specific data of a class or method? Let's add some strengh to our log message by adding some specific detail to it. Start by adding a class. 
 
 ```C#
   public class Dog
@@ -314,6 +334,24 @@ at System.ThrowHelper.ThrowInvalidOperationException(ExceptionResource resource)
 at System.Nullable`1.get_Value()
 at DogPark.Web.Controllers.GimmeErrorsController.CreateDogs(Nullable`1 licenseNum, String dogName, String dogBreed) in c:DogParkSandbox.NetDogPark.WebDogPark.WebControllersGimmeErrorsController.cs:line 57 [CID:(null)]
 ```
+This is useful, we get the boilerplate data like timestamp and we can certainly see the error thrown. In our simplified example above we could easily find the error by placing a breakpoint and rewrite our "Creating a dog" log message to something like: 
+
+```C#
+  log.Debug("Creating a dog named {0}.", myDog.dogName);
+```
+
+Our log messages would now look like this. 
+
+```C#
+DEBUG2019-04-23 13:11:08.9834 [11] Creating a dog named Fido [CID:(null)]
+DEBUG2019-04-23 13:11:10.8458 [11] Creating a dog named Rex [CID:(null)]
+ERROR2019-04-23 13:11:10.8673 [11] System.InvalidOperationException: Nullable object must have a value.
+at System.ThrowHelper.ThrowInvalidOperationException(ExceptionResource resource)
+at System.Nullable`1.get_Value()
+at DogPark.Web.Controllers.GimmeErrorsController.CreateDogs(Nullable`1 licenseNum, String dogName, String dogBreed) in c:DogParkSandbox.NetDogPark.WebDogPark.WebControllersGimmeErrorsController.cs:line 57 [CID:(null)]
+```
+
+So now we know when we created a dog named Rex there was an error with the license number. But what if we needed to see the whole Dog object? 
 
 See those `[CID:(null)]` entries. Those are part of the Log4Net logging methods, specifically a property called `debugData` that will display key-value pairs of data. Let's rewrite our opening log statement and serialize the data. 
 
@@ -329,7 +367,7 @@ Which will display in our log file as:
 
 Not bad, we're starting to get some context that provides a better picture of what is happening in our app. The problem with this approach is, if we had a very complext object, we would end up having to add a lot of additional items to our log string.  
 
-### Strucutred Logging
+## Strucutred Logging
 
 Logging should be simple and quick, not another process within itself and the end result easily readable. Log4Net offers a JSON pacakge, log4net.Ext.Json which enables you log any object as JSON. Install the package and add it as a serialized layout to any appender. 
 
@@ -363,7 +401,7 @@ Which will display a very readable log message.
 }
 ```
 
-### Diagnostic Context Logging
+## Diagnostic Logging
 
 And finally, our last point, diagnostic logging. In the `aDog` object I created above you might of noticed I logged the user who created it. This can be incredibly useful when your app is in production and thousands of users might be creating a `Dog` object. Adding diagnostic details such as this is what separates top level logging from just outputting the Exception to the console. 
 
