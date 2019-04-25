@@ -106,7 +106,7 @@ Trace.TraceInformation("Test message.");
 // You must close or flush the trace to empty the output buffer.
 Trace.Flush();
 ```
-<a name="loggingplan></a>
+<a name="loggingplan"></a>
 ## Creating a logging plan
 
 In order to consider your logs as part of your development debugging strategy as well as live application support there should be some set goals to your logging and a plan to achieve those goals.
