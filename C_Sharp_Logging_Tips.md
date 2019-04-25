@@ -6,7 +6,7 @@ Logging is the powerful bridge between being a vital tool for unit testing and d
 
 This article will provide you with seven tips to take C# logging to the next level whether it is logging to the console, a file or database for debugging and post-production support. We'll examine: 
 
-1. Configuring for TraceSource, the bundled logging library
+1. Configuring for TraceSource, the Microsoft bundled logging library
 2. Logging to a file
 3. Creating a logging plan
 4. Configuring a logging framework
