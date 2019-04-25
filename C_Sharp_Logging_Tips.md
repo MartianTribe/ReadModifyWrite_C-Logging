@@ -6,14 +6,15 @@ Logging is the powerful bridge between being a vital tool for unit testing and d
 
 This article will provide you with seven tips to take C# logging to the next level whether it is logging to the console, a file or database for debugging and post-production support. We'll examine: 
 
-1. [Configuring for TraceSource, the Microsoft bundled logging library](configuring-for-traceSource-the-microsoft-bundled-logging-library)
-2. Logging to a file
-3. Creating a logging plan
-4. Configuring a logging framework
-5. Logging Contextual Data
-6. Structured Logging
-7. Diagnostic Logging
+1. [Configuring for TraceSource, the Microsoft bundled logging library](#tracesource)
+2. [Logging to a file](#filelogging)
+3. [Creating a logging plan](#loggingplan)
+4. [Configuring a logging framework](#loggingframework)
+5. [Logging Contextual Data](#contextuallogging)
+6. [Structured Logging](#structuredlogging)
+7. [Diagnostic Logging](#diagnosticlogging)
 
+<a name="tracesource"></a>
 ## Configuring for TraceSource, the Microsoft bundled logging library
 
 Logging with C# requires a logging library. Fortunately Microsoft bundles a decent native library called TraceSource within the C# package. In order to utilize TraceSource, it will need to be defined in your configuration file. The configuration file is located in the folder with the application executable and has the name of the application with the .config file name extension added. You can define TraceSource by adding the code below. 
@@ -65,7 +66,7 @@ And you can now send messages to the console.
   Console.WriteLine("TraceSource switch level = " + ts.Switch.Level);
   Console.WriteLine("TraceSource switch = " + ts.Switch.DisplayName);
 ```
-
+<a name="filelogging"></a>
 ## Logging to a file
 
 Logging information to the screen is helpful, but what if you want to run a series of debug test and compare the results or maintain an event log? TraceSource outputs its messages to a `listener`, an object that receives messages from the `System.Diagnostics.Debug` and `System.Diagnostics.Trace` classes and outputs them to a predetermined location, such as the console.log, event log, or a file.  
@@ -105,7 +106,7 @@ Trace.TraceInformation("Test message.");
 // You must close or flush the trace to empty the output buffer.
 Trace.Flush();
 ```
-
+<a href="loggingplan></a>
 ## Creating a logging plan
 
 In order to consider your logs as part of your development debugging strategy as well as live application support there should be some set goals to your logging and a plan to achieve those goals.
@@ -132,6 +133,7 @@ Development teams should incorporate a culture of logging in the same manner tha
 
 - Select a logging framework that can handle the needs of your logging plan. 
 
+<a href="loggingframework"></a>
 ## Configuring a logging framework
 
 There are a lot of tech shops where the log messages are simply the error description. 
@@ -251,6 +253,7 @@ and the results put this log message into more context than just using TraceSour
 
 This log message provides us with a timnestamp, the thread, the logging level, the class the message originated from and the message. Not bad, but it would be nice to get even more context with our message. 
 
+<a href="contextuallogging"></a>
 ## Logging Contextual Data
 
 Using the standard contextual items available within the app such as the timestamp provides some much needed context to our log message. But what if you need specific data of a class or method? Let's add some strengh to our log message by adding some specific detail to it. Start by adding a class. 
@@ -367,6 +370,7 @@ Which will display in our log file as:
 
 Not bad, we're starting to get some context that provides a better picture of what is happening in our app. The problem with this approach is, if we had a very complext object, we would end up having to add a lot of additional items to our log string.  
 
+<a href="structuredlogging"></a>
 ## Strucutred Logging
 
 Logging should be simple and quick, not another process within itself and the end result easily readable. Log4Net offers a JSON pacakge, log4net.Ext.Json which enables you log any object as JSON. Install the package and add it as a serialized layout to any appender. 
@@ -400,7 +404,7 @@ Which will display a very readable log message.
   "createdBy": "mkurtz@alldogs.com"
 }
 ```
-
+<a href="diagnosticlogging"></a>
 ## Diagnostic Logging
 
 And finally, our last point, diagnostic logging. In the `aDog` object I created above you might of noticed I logged the user who created it. This can be incredibly useful when your app is in production and thousands of users might be creating a `Dog` object. Adding diagnostic details such as this is what separates top level logging from just outputting the Exception to the console. 
